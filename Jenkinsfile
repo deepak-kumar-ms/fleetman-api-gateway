@@ -74,7 +74,7 @@ pipeline {
         stage('Update Deployment file') {
             environment {
                 GIT_REPO_NAME = "fleetman-api-gateway"
-                GIT_ORG_NAME = "fleetman-k8s-ci"
+                GIT_ORG_NAME = "deepak-kumar-ms"
             }
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
