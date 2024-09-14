@@ -79,8 +79,7 @@ pipeline {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
-                        git config user.email "deepaktyagi048@gmail.com"
-                        git config user.name "deeepak-tyagii"
+                        git config user.name "DKSASI2003"
                         BUILD_NUMBER=${BUILD_NUMBER}
                         echo $BUILD_NUMBER
                         imageTag=$(grep -oP '(?<=fleetman-api-gateway:)[^ ]+' deploy.yaml)
