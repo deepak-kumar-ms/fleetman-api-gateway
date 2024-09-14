@@ -77,7 +77,7 @@ pipeline {
                 GIT_ORG_NAME = "deepak-kumar-ms"
             }
             steps {
-    withCredentials([string(credentialsId: 'Github', variable: 'GITHUB_TOKEN')]) {
+    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
         sh '''
             git config user.email "dksasi77@gmail.com"
             git config user.name "DKSASI2003"
@@ -88,7 +88,7 @@ pipeline {
             sed -i "s/${AWS_ECR_REPO_NAME}:${imageTag}/${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}/" deploy.yaml
             git add deploy.yaml
             git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
-            git push https://${GITHUB_TOKEN}@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME}.git
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME}.git --force
         '''
     }
 }
