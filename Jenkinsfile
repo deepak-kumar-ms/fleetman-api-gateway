@@ -77,7 +77,7 @@ pipeline {
                 GIT_ORG_NAME = "fleetman-k8s-ci"
             }
             steps {
-                withCredentials([string(credentialsId: 'GITHUB', variable: 'GITHUB_TOKEN')]) {
+                withCredentials([string(credentialsId: 'Github', variable: 'GITHUB_TOKEN')]) {
                     sh '''
 		    	git config --global user.email "dksasi77@gmail.com"
                         git config user.name "DKSASI2003"
