@@ -3,7 +3,6 @@ pipeline {
 
     environment {
         // You must set the following environment variables
-        SCANNER_HOME = tool 'sonar-scanner'
         AWS_ACCOUNT_ID = credentials('ACCOUNT_ID')
         AWS_ECR_REPO_NAME = credentials('ECR_REPO_API_GATEWAY')
         AWS_DEFAULT_REGION = 'us-east-1'
