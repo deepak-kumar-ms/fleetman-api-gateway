@@ -2,44 +2,42 @@ pipeline {
     agent any
 
     environment {
-        // You must set the following environment variables
+        // Set up environment variables
         AWS_ACCOUNT_ID = credentials('ACCOUNT_ID')
         AWS_ECR_REPO_NAME = credentials('ECR_REPO_API_GATEWAY')
         AWS_DEFAULT_REGION = 'us-east-1'
         ORGANIZATION_NAME = "fleetman-k8s-ci"
         SERVICE_NAME = "fleetman-api-gateway"
-            
         REPOSITORY_TAG = "${ORGANIZATION_NAME}-${SERVICE_NAME}:${BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/"
     }
 
     stages {
-      stage('Preparation') {
-         steps {
-            cleanWs()
-         }
-      }
-      stage('Checkout from Git') {
+        stage('Preparation') {
+            steps {
+                cleanWs()
+            }
+        }
+
+        stage('Checkout from Git') {
             steps {
                 git credentialsId: 'GitHub', url: "https://github.com/${ORGANIZATION_NAME}/${SERVICE_NAME}"
             }
-      }
+        }
 
-      stage('Build') {
-         steps {
-            sh '''mvn clean package'''
-         }
-      }
+        stage('Build') {
+            steps {
+                sh 'mvn clean package'
+            }
+        }
 
-         
-	    
         stage('Trivy File Scan') {
             steps {
                 sh 'trivy fs . > trivyfs.txt'
             }
         }
 
-        stage("Docker Image Build") {
+        stage('Docker Image Build') {
             steps {
                 script {
                     sh 'docker system prune -f'
@@ -49,47 +47,33 @@ pipeline {
             }
         }
 
-        stage("ECR Image Pushing") {
+        stage('ECR Image Pushing') {
             steps {
                 script {
-                        sh 'aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}'
-                        sh 'docker tag ${AWS_ECR_REPO_NAME} ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}'
-                        sh 'docker push ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}'
+                    sh 'aws ecr get-login-password --region ${AWS_DEFAULT_REGION} | docker login --username AWS --password-stdin ${REPOSITORY_URI}'
+                    sh 'docker tag ${AWS_ECR_REPO_NAME} ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}'
+                    sh 'docker push ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}'
                 }
             }
         }
 
-        stage("TRIVY Image Scan") {
+        stage('TRIVY Image Scan') {
             steps {
                 sh 'trivy image ${REPOSITORY_URI}${AWS_ECR_REPO_NAME}:${BUILD_NUMBER} > trivyimage.txt'
             }
         }
 
-        stage('Checkout Code') {
-            steps {
-                git credentialsId: 'GitHub', url: "https://github.com/${ORGANIZATION_NAME}/${SERVICE_NAME}"
-            }
-        }
-
-        stage('Update Deployment file') {
-            environment {
-                GIT_REPO_NAME = "fleetman-api-gateway"
-                GIT_ORG_NAME = "deepak-kumar-ms"
-            }
-            pipeline {
-    agent any
-    stages {
         stage('Update Deployment File') {
             steps {
                 withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
                     script {
                         def ecrRepoName = env.AWS_ECR_REPO_NAME
                         def buildNumber = env.BUILD_NUMBER
-                        
+
                         sh '''
                             git config user.email "dksasi77@gmail.com"
                             git config user.name "DKSASI2003"
-                            echo "Build number: ${BUILD_NUMBER}"
+                            echo "Build number: ${buildNumber}"
                             
                             # Display the content of deploy.yaml for debugging
                             cat deploy.yaml
@@ -113,17 +97,11 @@ pipeline {
                             git pull --rebase origin master
 
                             # Push changes
-                            git push https://${GITHUB_TOKEN}@github.com/${env.GIT_ORG_NAME}/${env.GIT_REPO_NAME}.git HEAD:master
+                            git push https://${GITHUB_TOKEN}@github.com/${env.ORGANIZATION_NAME}/${env.SERVICE_NAME}.git HEAD:master
                         '''
                     }
                 }
             }
-        }
-    }
-}
-
-
-
         }
     }
 }
