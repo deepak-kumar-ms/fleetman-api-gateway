@@ -32,24 +32,7 @@ pipeline {
          }
       }
 
-         stage('Sonarqube Analysis') {
-            steps {
-				withSonarQubeEnv('sonar-server') {
-					sh '''
-					mvn clean verify sonar:sonar \
-					-Dsonar.projectKey=fleetman-api-gateway '''
-				}
-                
-            }
-        }
-
-        stage('Quality Check') {
-            steps {
-                script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'sonar-token' 
-                }
-            }
-        }
+         
 	    
         stage('Trivy File Scan') {
             steps {
