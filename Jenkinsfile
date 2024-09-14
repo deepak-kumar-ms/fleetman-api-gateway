@@ -89,14 +89,15 @@ pipeline {
             git add deploy.yaml
             git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
             
-            # Pull latest changes from the remote repository
-            git pull --rebase
+            # Pull latest changes from the remote repository and rebase
+            git pull --rebase origin master
             
             # Push the changes to the remote repository
             git push https://$GITHUB_TOKEN@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME}.git HEAD:master
         '''
     }
 }
+
 
         }
     }
