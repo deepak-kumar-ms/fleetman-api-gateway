@@ -79,24 +79,20 @@ pipeline {
             steps {
     withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
         sh '''
-            git config --global user.email "dksasi77@gmail.com"
+            git config user.email "dksasi77@gmail.com"
             git config user.name "DKSASI2003"
             BUILD_NUMBER=${BUILD_NUMBER}
             echo $BUILD_NUMBER
-            imageTag=$(grep -oP '(?<=fleetman-api-gateway:)[^ ]+' deploy.yaml)
+            imageTag=$(grep -oP '(?<=fleetman-position-simulator:)[^ ]+' deploy.yaml)
             echo $imageTag
             sed -i "s/${AWS_ECR_REPO_NAME}:${imageTag}/${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}/" deploy.yaml
             git add deploy.yaml
             git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
-            
-            # Pull latest changes from the remote repository and rebase
-            git pull --rebase origin master
-            
-            # Push the changes to the remote repository
-            git push https://$GITHUB_TOKEN@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME}.git HEAD:master
+            git push https://${GITHUB_TOKEN}@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME}.git --force
         '''
     }
 }
+
 
 
         }
