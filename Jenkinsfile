@@ -76,20 +76,49 @@ pipeline {
                 GIT_REPO_NAME = "fleetman-api-gateway"
                 GIT_ORG_NAME = "deepak-kumar-ms"
             }
+            pipeline {
+    agent any
+    stages {
+        stage('Update Deployment File') {
             steps {
-    withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-        sh '''
-            git config user.email "dksasi77@gmail.com"
-            git config user.name "DKSASI2003"
-            BUILD_NUMBER=${BUILD_NUMBER}
-            echo $BUILD_NUMBER
-            imageTag=$(grep -oP '(?<=fleetman-position-simulator:)[^ ]+' deploy.yaml)
-            echo $imageTag
-            sed -i "s/${AWS_ECR_REPO_NAME}:${imageTag}/${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}/" deploy.yaml
-            git add deploy.yaml
-            git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
-            git push https://${GITHUB_TOKEN}@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME}.git --force
-        '''
+                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
+                    script {
+                        def ecrRepoName = env.AWS_ECR_REPO_NAME
+                        def buildNumber = env.BUILD_NUMBER
+                        
+                        sh '''
+                            git config user.email "dksasi77@gmail.com"
+                            git config user.name "DKSASI2003"
+                            echo "Build number: ${BUILD_NUMBER}"
+                            
+                            # Display the content of deploy.yaml for debugging
+                            cat deploy.yaml
+
+                            # Extract the current image tag
+                            imageTag=$(grep -oP '(?<=fleetman-position-simulator:)[^ ]+' deploy.yaml || echo "")
+                            echo "Current image tag: $imageTag"
+                            
+                            if [ -z "$imageTag" ]; then
+                                echo "Error: Image tag not found in deploy.yaml"
+                                exit 1
+                            fi
+
+                            # Update the image tag
+                            sed -i "s/${ecrRepoName}:${imageTag}/${ecrRepoName}:${buildNumber}/" deploy.yaml
+                            
+                            git add deploy.yaml
+                            git commit -m "Update deployment Image to version ${buildNumber}"
+                            
+                            # Pull latest changes to ensure the local branch is up-to-date
+                            git pull --rebase origin master
+
+                            # Push changes
+                            git push https://${GITHUB_TOKEN}@github.com/${env.GIT_ORG_NAME}/${env.GIT_REPO_NAME}.git HEAD:master
+                        '''
+                    }
+                }
+            }
+        }
     }
 }
 
