@@ -8,6 +8,7 @@ pipeline {
         AWS_DEFAULT_REGION = 'us-east-1'
         ORGANIZATION_NAME = "deepak-kumar-ms"
         SERVICE_NAME = "fleetman-api-gateway"
+        GITHUB_PASS = 'gitganesh007'
             
         REPOSITORY_TAG = "${ORGANIZATION_NAME}-${SERVICE_NAME}:${BUILD_ID}"
         REPOSITORY_URI = "${AWS_ACCOUNT_ID}.dkr.ecr.${AWS_DEFAULT_REGION}.amazonaws.com/"
@@ -74,23 +75,23 @@ pipeline {
                 GIT_REPO_NAME = "fleetman-position-simulator"
                 GIT_ORG_NAME = "deepak-kumar-ms"
             }
+            stage('Update Deployment file') {
             steps {
-                withCredentials([string(credentialsId: 'github', variable: 'GITHUB_TOKEN')]) {
-                    sh '''
-                        git config user.email "dksasi77@gmail.com"
-                        git config user.name "DKSASI2003"
-                        BUILD_NUMBER=${BUILD_NUMBER}
-                        echo $BUILD_NUMBER
-                        imageTag=$(grep -oP '(?<=fleetman-position-simulator:)[^ ]+' deploy.yaml)
-                        echo $imageTag
-                        sed -i "s/${AWS_ECR_REPO_NAME}:${imageTag}/${AWS_ECR_REPO_NAME}:${BUILD_NUMBER}/" deploy.yaml
-                        echo $deploy.yaml
-                        git add deploy.yaml
-                        git commit -m "Update deployment Image to version ${BUILD_NUMBER}"
-                        git push https://${GITHUB_TOKEN}@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME} HEAD:master
-                    '''
-                }
+                sh """
+                    git config user.email "dksasi77@gmail.com"
+                    git config user.name "DKSASI2003"
+                    
+                    # Your deployment file update logic here
+                    # For example:
+                    # sed -i 's/old-tag/new-tag/' deploy.yaml
+                    
+                    # Commit and push changes
+                    git add deploy.yaml
+                    git commit -m "Update deployment file"
+                    git push https://${GITHUB_USER}:${GITHUB_PASS}@github.com/${GIT_ORG_NAME}/${GIT_REPO_NAME} master
+                """
             }
+        }
         }
     }
 }
